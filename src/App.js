@@ -1,27 +1,46 @@
 import { useState } from 'react';
+
 import './App.css';
 import { caesarCipher, caesarDecrypt } from './caesar-algorithm';
 import { atbashCipher, atbashDecrypt } from './atbash-algorithm';
+import { rot13Cipher, rot13Decrypt } from './rot13-algorithm';
+import { substitutionCipher, substitutionDecrypt } from './substitution-algorithm';
+import { polybiusEncrypt, polybiusDecrypt } from './polybius-algorithm';
 
 function App() {
   const [inputText, setInputText] = useState('');
   const [shiftValue, setShiftValue] = useState(3);
-  const [encryptedText, setEncryptedText] = useState('');
-  const [decryptedText, setDecryptedText] = useState('');
+  const [outputText, setOutputText] = useState('');
   const [cipherMethod, setCipherMethod] = useState('caesar');
+  const [substitutionKey, setSubstitutionKey] = useState('QWERTYUIOPLKJHGFDSAZXCVBNM'); // Default substitution key
 
   const handleShift = (e) => {
     let value = parseInt(e.target.value, 10);
     if (isNaN(value)) value = 0;
     setShiftValue(value % 26);
-    setEncryptedText("");
-    setDecryptedText("");
+  };
+
+  const handleSubstitutionKeyChange = (e) => {
+    const key = e.target.value.toUpperCase();
+
+    // Validate the substitution key
+    if (key.length !== 26) {
+      alert('Substitution key must be exactly 26 characters long.');
+      return;
+    }
+
+    const uniqueKey = new Set(key.split(''));
+    if (uniqueKey.size !== 26 || ![...uniqueKey].every((char) => /^[A-Z]$/.test(char))) {
+      alert('Substitution key must only contain unique alphabetic characters.');
+      return;
+    }
+
+    setSubstitutionKey(key); // If valid, save the substitution key
   };
 
   const handleCipherMethodChange = (e) => {
     setCipherMethod(e.target.value);
-    setEncryptedText("");
-    setDecryptedText("");
+    setOutputText('');
   };
 
   const handleEncrypt = () => {
@@ -30,19 +49,30 @@ function App() {
       encrypted = caesarCipher(inputText, shiftValue);
     } else if (cipherMethod === 'atbash') {
       encrypted = atbashCipher(inputText);
+    } else if (cipherMethod === 'rot13') {
+      encrypted = rot13Cipher(inputText);
+    } else if (cipherMethod === 'substitution') {
+      encrypted = substitutionCipher(inputText, substitutionKey);
+    } else if (cipherMethod === 'polybius') {
+      encrypted = polybiusEncrypt(inputText);
     }
-    setEncryptedText(encrypted);
-    setDecryptedText("");
+    setOutputText(encrypted);
   };
 
   const handleDecrypt = () => {
     let decrypted;
     if (cipherMethod === 'caesar') {
-      decrypted = caesarDecrypt(encryptedText, shiftValue);
+      decrypted = caesarDecrypt(inputText, shiftValue);
     } else if (cipherMethod === 'atbash') {
-      decrypted = atbashDecrypt(encryptedText);
+      decrypted = atbashDecrypt(inputText);
+    } else if (cipherMethod === 'rot13') {
+      decrypted = rot13Decrypt(inputText);
+    } else if (cipherMethod === 'substitution') {
+      decrypted = substitutionDecrypt(inputText, substitutionKey);
+    } else if (cipherMethod === 'polybius') {
+      decrypted = polybiusDecrypt(inputText);
     }
-    setDecryptedText(decrypted);
+    setOutputText(decrypted);
   };
 
   return (
@@ -52,23 +82,31 @@ function App() {
         <textarea
           placeholder="Enter text"
           value={inputText}
-          onChange={(e) => { setEncryptedText(""); setDecryptedText(""); setInputText(e.target.value) }}
+          onChange={(e) => {
+            setOutputText('');
+            setInputText(e.target.value);
+          }}
         />
       </div>
-    
+
       <div className="cipher-method-container">
         <label className="cipher-label">Select Cipher Method</label>
         <div className="select-container">
-          <select value={cipherMethod} onChange={handleCipherMethodChange} className="cipher-select">
+          <select
+            value={cipherMethod}
+            onChange={handleCipherMethodChange}
+            className="cipher-select"
+          >
             <option value="caesar">Caesar Cipher</option>
             <option value="atbash">Atbash Cipher</option>
+            <option value="rot13">ROT13 Cipher</option>
+            <option value="substitution">Substitution Cipher</option>
+            <option value="polybius">Polybius Square Cipher</option>
           </select>
         </div>
       </div>
 
-
-      {
-        cipherMethod === 'caesar' &&
+      {cipherMethod === 'caesar' && (
         <div className="shift-container">
           <label htmlFor="shiftValue">Shift Value: </label>
           <input
@@ -80,27 +118,40 @@ function App() {
             max="25"
           />
         </div>
-      }
+      )}
 
-      <button 
-        onClick={handleEncrypt} 
-        disabled={!inputText}
-        className={inputText ? "encrypt" : "encrypt enableEncrypt"}>
-        Encrypt
-      </button>
-      <button 
-        onClick={handleDecrypt}
-        disabled={!encryptedText}
-        className={encryptedText ? "decrypt" : "decrypt enableDecrypted"} 
-      >
-        Decrypt
-      </button>
+      {cipherMethod === 'substitution' && (
+        <div className="substitution-container">
+          <label htmlFor="subKey">Substitution Key: </label>
+          <input
+            type="text"
+            id="subKey"
+            value={substitutionKey}
+            onChange={handleSubstitutionKeyChange}
+          />
+        </div>
+      )}
+
+      <div className="action-buttons">
+        <button
+          onClick={handleEncrypt}
+          disabled={!inputText}
+          className={inputText ? 'encrypt' : 'encrypt enableEncrypt'}
+        >
+          Encrypt
+        </button>
+        <button
+          onClick={handleDecrypt}
+          disabled={!inputText}
+          className={inputText ? 'decrypt' : 'decrypt enableDecrypted'}
+        >
+          Decrypt
+        </button>
+      </div>
 
       <div className="result-container">
-        <h2>Encrypted Text</h2>
-        <p>{encryptedText}</p>
-        <h2>Decrypted Text</h2>
-        <p>{decryptedText}</p>
+        <h2>Output Text</h2>
+        <p>{outputText}</p>
       </div>
     </div>
   );
