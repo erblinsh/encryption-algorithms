@@ -1,160 +1,162 @@
-import { useState } from 'react';
-
-import './App.css';
-import { caesarCipher, caesarDecrypt } from './caesar-algorithm';
-import { atbashCipher, atbashDecrypt } from './atbash-algorithm';
-import { rot13Cipher, rot13Decrypt } from './rot13-algorithm';
-import { substitutionCipher, substitutionDecrypt } from './substitution-algorithm';
-import { polybiusEncrypt, polybiusDecrypt } from './polybius-algorithm';
-
-function App() {
-  const [inputText, setInputText] = useState('');
-  const [shiftValue, setShiftValue] = useState(3);
-  const [outputText, setOutputText] = useState('');
-  const [cipherMethod, setCipherMethod] = useState('caesar');
-  const [substitutionKey, setSubstitutionKey] = useState('QWERTYUIOPLKJHGFDSAZXCVBNM'); // Default substitution key
-
-  const handleShift = (e) => {
-    let value = parseInt(e.target.value, 10);
-    if (isNaN(value)) value = 0;
-    setShiftValue(value % 26);
-  };
-
-  const handleSubstitutionKeyChange = (e) => {
-    const key = e.target.value.toUpperCase();
-
-    // Validate the substitution key
-    if (key.length !== 26) {
-      alert('Substitution key must be exactly 26 characters long.');
-      return;
-    }
-
-    const uniqueKey = new Set(key.split(''));
-    if (uniqueKey.size !== 26 || ![...uniqueKey].every((char) => /^[A-Z]$/.test(char))) {
-      alert('Substitution key must only contain unique alphabetic characters.');
-      return;
-    }
-
-    setSubstitutionKey(key); // If valid, save the substitution key
-  };
-
-  const handleCipherMethodChange = (e) => {
-    setCipherMethod(e.target.value);
-    setOutputText('');
-  };
-
-  const handleEncrypt = () => {
-    let encrypted;
-    if (cipherMethod === 'caesar') {
-      encrypted = caesarCipher(inputText, shiftValue);
-    } else if (cipherMethod === 'atbash') {
-      encrypted = atbashCipher(inputText);
-    } else if (cipherMethod === 'rot13') {
-      encrypted = rot13Cipher(inputText);
-    } else if (cipherMethod === 'substitution') {
-      encrypted = substitutionCipher(inputText, substitutionKey);
-    } else if (cipherMethod === 'polybius') {
-      encrypted = polybiusEncrypt(inputText);
-    }
-    setOutputText(encrypted);
-  };
-
-  const handleDecrypt = () => {
-    let decrypted;
-    if (cipherMethod === 'caesar') {
-      decrypted = caesarDecrypt(inputText, shiftValue);
-    } else if (cipherMethod === 'atbash') {
-      decrypted = atbashDecrypt(inputText);
-    } else if (cipherMethod === 'rot13') {
-      decrypted = rot13Decrypt(inputText);
-    } else if (cipherMethod === 'substitution') {
-      decrypted = substitutionDecrypt(inputText, substitutionKey);
-    } else if (cipherMethod === 'polybius') {
-      decrypted = polybiusDecrypt(inputText);
-    }
-    setOutputText(decrypted);
-  };
-
-  return (
-    <div className="App">
-      <h1>Encryption App</h1>
-      <div className="input-container">
-        <textarea
-          placeholder="Enter text"
-          value={inputText}
-          onChange={(e) => {
-            setOutputText('');
-            setInputText(e.target.value);
-          }}
-        />
-      </div>
-
-      <div className="cipher-method-container">
-        <label className="cipher-label">Select Cipher Method</label>
-        <div className="select-container">
-          <select
-            value={cipherMethod}
-            onChange={handleCipherMethodChange}
-            className="cipher-select"
-          >
-            <option value="caesar">Caesar Cipher</option>
-            <option value="atbash">Atbash Cipher</option>
-            <option value="rot13">ROT13 Cipher</option>
-            <option value="substitution">Substitution Cipher</option>
-            <option value="polybius">Polybius Square Cipher</option>
-          </select>
-        </div>
-      </div>
-
-      {cipherMethod === 'caesar' && (
-        <div className="shift-container">
-          <label htmlFor="shiftValue">Shift Value: </label>
-          <input
-            type="number"
-            id="shiftValue"
-            value={shiftValue}
-            onChange={handleShift}
-            min="-25"
-            max="25"
-          />
-        </div>
-      )}
-
-      {cipherMethod === 'substitution' && (
-        <div className="substitution-container">
-          <label htmlFor="subKey">Substitution Key: </label>
-          <input
-            type="text"
-            id="subKey"
-            value={substitutionKey}
-            onChange={handleSubstitutionKeyChange}
-          />
-        </div>
-      )}
-
-      <div className="action-buttons">
-        <button
-          onClick={handleEncrypt}
-          disabled={!inputText}
-          className={inputText ? 'encrypt' : 'encrypt enableEncrypt'}
-        >
-          Encrypt
-        </button>
-        <button
-          onClick={handleDecrypt}
-          disabled={!inputText}
-          className={inputText ? 'decrypt' : 'decrypt enableDecrypted'}
-        >
-          Decrypt
-        </button>
-      </div>
-
-      <div className="result-container">
-        <h2>Output Text</h2>
-        <p>{outputText}</p>
-      </div>
-    </div>
-  );
+* {
+  box-sizing: border-box;
 }
 
-export default App;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #f4f4f9;
+  color: #333;
+  line-height: 1.6;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.App {
+  width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  color: #333;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.input-container {
+  margin: 20px 0;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  padding: 15px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background-color: #fafafa;
+  color: #333;
+  transition: border 0.3s ease-in-out;
+}
+
+textarea:focus {
+  border: 1px solid #4caf50;
+  outline: none;
+}
+
+.shift-container {
+  margin-top: 20px;
+}
+
+input {
+  font-size: 1rem;
+  padding: 10px;
+  width: 80px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+input:focus {
+  border: 1px solid #4caf50;
+  outline: none;
+}
+
+button {
+  padding: 12px 24px;
+  margin: 10px 5px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.encrypt,
+.decrypt {
+  transition: background-color 0.3s ease;
+}
+
+.enableEncrypt,
+.enableDecrypted {
+  background-color: #ccc !important;
+}
+
+.result-container {
+  margin-top: 30px;
+}
+
+h2 {
+  font-size: 1.5rem;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+p {
+  font-size: 1rem;
+  color: #333;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  word-wrap: break-word;
+}
+
+.cipher-method-container {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.cipher-label {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.select-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+.cipher-select {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  background-color: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.cipher-select:focus {
+  border-color: #4caf50;
+  outline: none;
+}
+
+.cipher-select option {
+  font-size: 1rem;
+}
